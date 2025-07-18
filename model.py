@@ -6,9 +6,16 @@ from peft import get_peft_model, LoraConfig, PeftModel
 class PolicyModel(nn.Module):
     def __init__(self, model_name, tokenizer, max_prompt_length, max_summary_length, logger):
         super().__init__()
-        base_model = AutoModelForCausalLM.from_pretrained(model_name)
+        logger.info("Initializing base model... %s", model_name)
+        base_model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+        logger.info("freezing base model...")
+        for param in base_model.parameters():
+            param.requires_grad = False
+        logger.info("Base model frozen")
+
         self.tokenizer = tokenizer
 
+        logger.info("Initializing PEFT model...")
         lora_config = LoraConfig(
             r=8,
             lora_alpha=32,
@@ -16,7 +23,7 @@ class PolicyModel(nn.Module):
             lora_dropout=0.1,
             bias="none",
         )
-
+    
         logger.info("Initializing PEFT model...")
         self.model = get_peft_model(base_model, lora_config)
         self.model.print_trainable_parameters()

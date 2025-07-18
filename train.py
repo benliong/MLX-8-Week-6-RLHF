@@ -21,7 +21,7 @@ hyperparameters = {
 
 def main():
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    tokenizer = AutoTokenizer.from_pretrained(hyperparameters["tokenizer_name"])
+    tokenizer = AutoTokenizer.from_pretrained(hyperparameters["tokenizer_name"], trust_remote_code=True)
     logger = setup_logging()
     logger.info("Hyperparameters: %s", hyperparameters)
     logger.info("Device: %s", get_device())
@@ -44,6 +44,7 @@ def main():
         max_prompt_length=hyperparameters["max_prompt_length"], 
         max_summary_length=hyperparameters["max_summary_length"],
         logger=logger)
+    model.to(get_device())
     optimizer = torch.optim.AdamW(model.parameters(), lr=hyperparameters["learning_rate"])
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
     # best_val_loss = float("inf")
